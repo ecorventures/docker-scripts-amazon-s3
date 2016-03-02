@@ -17,8 +17,6 @@ First, the scripts need to be registered with the Docker daemon:
 ```sh
 docker create \
   --name scripts-aws-s3 \
-  -e "AWS_KEY=AKIAIGHI7JKL7MNOPQ2R" \
-  -e "AWS_SECRET=AbCDEfgHIJ1kLMN2O1PQRsTUvwxyZABcdEFGHi9J" \
   ecor/scripts-aws-s3 /bin/true
 ```
 
@@ -38,6 +36,8 @@ For example, connecting to a golang environment would look like:
 
 ```sh
 docker run -i -t -d --name go \
+  -e "AWS_KEY=AKIAIGHI7JKL7MNOPQ2R" \
+  -e "AWS_SECRET=AbCDEfgHIJ1kLMN2O1PQRsTUvwxyZABcdEFGHi9J" \
   -v /path/to/my/go/code:/app \
   --volumes-from scripts-aws-s3 \
   golang:1.6.0-wheezy bash
