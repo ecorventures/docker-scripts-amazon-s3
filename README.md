@@ -1,9 +1,11 @@
 # ecor/scripts-aws-s3
 
+[![](https://badge.imagelayers.io/ecor/scripts-aws-s3:latest.svg)](https://imagelayers.io/?images=ecor/scripts-aws-s3:latest 'Get your own badge on imagelayers.io')
+
 This is a [data volume container](https://docs.docker.com/engine/userguide/containers/dockervolumes/)
 that includes several bash scripts for interacting with Amazon S3. These scripts
 can be attached to any container capable of running a bash script. It is
-extremely lightweight, but it is designed to attach functionality to other
+extremely lightweight. It's designed to attach functionality to other
 containers. It is **not** designed to execute S3 commands from the Docker host.
 If that's what you want, you are more likely to find [yep1/s3](https://hub.docker.com/r/yep1/s3/)
 to be more useful.
