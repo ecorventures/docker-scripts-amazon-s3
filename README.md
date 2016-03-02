@@ -6,9 +6,10 @@ This is a [data volume container](https://docs.docker.com/engine/userguide/conta
 that includes several bash scripts for interacting with Amazon S3. These scripts
 can be attached to any container capable of running a bash script. It is
 extremely lightweight. It's designed to attach functionality to other
-containers. It is **not** designed to execute S3 commands from the Docker host.
-If that's what you want, you are more likely to find [yep1/s3](https://hub.docker.com/r/yep1/s3/)
-to be more useful.
+containers. It is **not directly** designed to execute S3 commands from the Docker host.
+It is possible to do this by attaching to an existing image. If you just want a
+container to execute a command from the Docker host though,
+[yep1/s3](https://hub.docker.com/r/yep1/s3/) may be more useful.
 
 ## Preparing the volume
 
