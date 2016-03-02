@@ -7,12 +7,13 @@ that includes several bash scripts for interacting with Amazon S3. These scripts
 can be attached to any container capable of running a bash script. It is
 extremely lightweight.
 
-This volume is designed to attach functionality to other containers.
-It is **not directly** designed to execute S3 commands from the Docker host, but
-you can run S3 commands directly from the Docker host by attaching to a pre-existing
-container (see Postgres example below). If you just want a container to execute
-a command from the Docker host, [yep1/s3](https://hub.docker.com/r/yep1/s3/) may
-be more useful.
+This volume is designed to attach functionality to other containers. It depends
+on having bash and openssl available, supplied by the container it's being
+attached to. This image is **not directly** designed to execute S3 commands from
+the Docker host, but you can run S3 commands directly from the Docker host by
+attaching to a pre-existing container (see Postgres example below). If you just
+want a container to execute a command from the Docker host,
+[yep1/s3](https://hub.docker.com/r/yep1/s3/) may be more useful.
 
 ## Preparing the volume
 
