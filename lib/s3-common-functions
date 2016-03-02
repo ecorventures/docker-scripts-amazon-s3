@@ -6,9 +6,9 @@ Copyright 2007 Raphael James Cohn
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
 in compliance with the License.
 You may obtain a copy of the License at
- 
+
  	http://www.apache.org/licenses/LICENSE-2.0
- 	
+
 Unless required by applicable law or agreed to in writing, software distributed under the License
 is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
 or implied. See the License for the specific language governing permissions and limitations under
@@ -99,14 +99,14 @@ function checkEnvironment
 	for program in "${programs[@]}"; do
 		checkProgramIsInEnvironment "$program"
 	done
-	
+
 	local temporaryFolder="${TMPDIR:-/tmp}"
 	if [ ! -x "$temporaryFolder" ]; then
 		printErrorHelpAndExit "Environment Error: The temporary directory ($temporaryFolder) does not exist. Please set the TMPDIR environment variable to your temporary directory" $invalidEnvironmentExitCode
 	fi
 	readonly temporaryDirectory="$temporaryFolder/s3-bash/$weAreKnownAs"
 	mkdir -p "$temporaryDirectory" || printErrorHelpAndExit "Environment Error: Could not create a temporary directory ($temporaryDiectory). Please check you /tmp folder permissions allow files and folders to be created and you have sufficient disc space" $invalidEnvironmentExitCode
-	
+
 	#Check we can create and delete temporary files
 	createTemporaryFile "check"
 	temporaryFileCheck="$(mostRecentTemporaryFile)"
@@ -165,7 +165,7 @@ function padDecodedKeyTo
 	local originalKeyFile="$1"
 	local keyFile="$2"
 	cp "$originalKeyFile" "$keyFile"
-	
+
 	local keySize=$(ls -l "$keyFile" | awk '{ print $5 }')
 	if [ $keySize -lt 64 ]; then
 		local zerosToWrite=$((64 - $keySize))
@@ -196,7 +196,7 @@ function readBytesAndXorAndWriteAsBytesTo
 	local inputFile="$1"
 	local xorByte=$2
 	local outputFile="$3"
-	
+
 	od -v -A n -t uC "$inputFile" | awk '{ OFS="\n"; for (i = 1; i <= NF; i++) print $i }' |
 	while read byte; do
 		((xord = byte ^ xorByte))
@@ -226,9 +226,9 @@ function writeStringToSign
 	echo "$contentMD5" >> "$outputFile"
 	echo "$contentType" >> "$outputFile"
 	echo "$currentDateTime" >> "$outputFile"
-	
+
 	writeStringToSignAmazonHeaders "$outputFile"
-	
+
 	urlPath="$(echo "$url" | awk 'BEGIN { FS="[?]"} { print $1 }')"
 	urlQueryString="$(echo "$url" | awk 'BEGIN { FS="[?]"} { print $2 }')"
 	printf "$urlPath" >> "$outputFile"
@@ -241,7 +241,7 @@ function writeStringToSign
 function writeStringToSignAmazonHeaders()
 {
 	local outputFile="$1"
-	
+
 	#Convert all headers to lower case
 	#sort
 	#Strip ": " to ":"
@@ -254,16 +254,16 @@ function writeStringToSignAmazonHeaders()
 function computeAwsAuthorizationHeader
 {
 	checkAwsKey "$awsAccessSecretKeyIdFile"
-	
+
 	createTemporaryFile "key"
 	local tempKeyFile="$(mostRecentTemporaryFile)"
-	
+
 	createTemporaryFile "ipad"
 	local ipadHashingFile="$(mostRecentTemporaryFile)"
-	
+
 	createTemporaryFile "opad"
 	local opadHashingFile="$(mostRecentTemporaryFile)"
-	
+
 	createTemporaryFile "HMAC-SHA1"
 	local hmacSha1File="$(mostRecentTemporaryFile)"
 
@@ -312,7 +312,7 @@ function runCurl
 		printf " --header \"Content-MD5: %s\"" "$contentMD5" >> "$tempCurlCommand"
 	fi
 	printf " \"%s\"\n" "$fullUrl" >> "$tempCurlCommand"
-	
+
 	unsetErrorTraps
 	exec env bash "$tempCurlCommand"
 }
@@ -321,6 +321,16 @@ function initialise
 {
 	setErrorTraps
 	checkEnvironment
+  createIdFile
+}
+
+function createIdFile
+{
+  if [ ! -f /.keys/.passwd-s3 ]; then
+    mkdir -p /.keys
+    # touch /.keys/.passwd-s3
+    echo $AWS_SECRET | tr -d '\n' > /.keys/.passwd-s3
+  fi
 }
 
 function main

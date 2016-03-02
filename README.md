@@ -2,7 +2,11 @@
 
 This is a [data volume container](https://docs.docker.com/engine/userguide/containers/dockervolumes/)
 that includes several bash scripts for interacting with Amazon S3. These scripts
-can be attached to any container capable of running a bash script.
+can be attached to any container capable of running a bash script. It is
+extremely lightweight, but it is designed to attach functionality to other
+containers. It is **not** designed to execute S3 commands from the Docker host.
+If that's what you want, you are more likely to find [yep1/s3](https://hub.docker.com/r/yep1/s3/)
+to be more useful.
 
 ## Preparing the volume
 
@@ -11,7 +15,7 @@ First, the scripts need to be registered with the Docker daemon:
 ```sh
 docker create \
   --name scripts-aws-s3 \
-  -e "AWS_KEY=AKIAIGHI3JKL7MNOPQ2R" \
+  -e "AWS_KEY=AKIAIGHI7JKL7MNOPQ2R" \
   -e "AWS_SECRET=AbCDEfgHIJ1kLMN2O1PQRsTUvwxyZABcdEFGHi9J" \
   ecor/scripts-aws-s3 /bin/true
 ```
@@ -33,7 +37,6 @@ For example, connecting to a golang environment would look like:
 ```sh
 docker run -i -t -d --name go \
   -v /path/to/my/go/code:/app \
-  -w /app \
   --volumes-from scripts-aws-s3 \
   golang:1.6.0-wheezy bash
 ```
@@ -52,7 +55,10 @@ docker exec -i -t go bash
 ```sh
 root@go:/app# ls -l /scripts/aws/s3/
 total 28
+-rwxr-xr-x 1 root root 4085 Mar 02  2016 delete
+-rwxr-xr-x 1 root root 4085 Mar 02  2016 get
 -rwxr-xr-x 1 root root  567 Sep 24  2007 Licence
+-rwxr-xr-x 1 root root 4085 Mar 02  2016 put
 -rw-r--r-- 1 root root 9886 Oct 10  2007 s3-common-functions
 -rwxr-xr-x 1 root root 3519 Oct 10  2007 s3-delete
 -rwxr-xr-x 1 root root 3562 Oct 10  2007 s3-get
@@ -67,10 +73,43 @@ running on an Ubuntu image, you could just execute an S3 command by running:
 docker run --rm \
   --name db-backup \
   --volumes-from scripts-aws-s3 \
-  postgres /scripts/aws/s3/s3-put <params>
+  postgres /scripts/aws/s3/put <params>
 ```
 
 The example above requires parameters passed to the s3 script, but the point is
 a script can be executed arbitrarily using docker and existing images. The example
 above was taken from a PostgreSQL environment where a daily cronjob executes the
 command (from the example) to send a daily Postgre backup file to Amazon S3.
+
+# Scripts
+
+There are a total of 7 scripts, but only 3 really matter for general use.
+Any script (found in the `/lib` directory) beginning with `s3-` is part of the
+original [AWS bash commands](http://aws.amazon.com/code/943),
+which were a userland implementation of S3 functionality made available via
+Amazon. These commands pre-date Docker. There was a slight modification made
+to the original `s3-common-functions` file to better support Amazon secrets.
+
+The remaining scripts act as a polyfill to modernize the original scripts
+(which happen to work pretty darn well) for use within Docker. It forces use
+of SSL (HTTPS) for all communication and handles all credentials automatically.
+Remember that these "polyfill" functions are mostly for convenience. If you
+have a use case where you need to use a different AWS Key/Secret from the one
+supplied in the `docker run` command, use the `s3-____` file directly.
+
+**get**: `get /my.bucket/path/to/file.txt > /path/to/output.txt`
+
+The `get` command reads the contents of the remote file and writes it to
+`stdout`. In the example, we've piped `stdout` to a file at `/path/to/output.txt`.
+
+**put**: `put /my/local/file > /my.bucket/path/to/file.txt`.
+
+_You must urlencode /my.bucket/path/to/file.txt yourself!_
+
+By default, all files are considered `plain/text`. If you want to specify an
+alternative content type, supply a `-c` option. For example, `-c application/octet-stream`.
+
+**delete**: `delete /my.bucket/path/to/file.txt`.
+
+Removes a file. This does not work on directories unless they're empty (this is
+an Amazon S3 thing, not a limitation of these scripts).
