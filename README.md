@@ -1,4 +1,4 @@
-# ecor/scripts-s3
+# ecor/scripts-aws-s3
 
 This is a [data volume container](https://docs.docker.com/engine/userguide/containers/dockervolumes/)
 that includes several bash scripts for interacting with Amazon S3. These scripts
@@ -10,17 +10,17 @@ First, the scripts need to be registered with the Docker daemon:
 
 ```sh
 docker create \
-  --name scripts-s3 \
+  --name scripts-aws-s3 \
   -e "AWS_KEY=AKIAIGHI3JKL7MNOPQ2R" \
   -e "AWS_SECRET=AbCDEfgHIJ1kLMN2O1PQRsTUvwxyZABcdEFGHi9J" \
-  ecor/scripts-s3 /bin/true
+  ecor/scripts-aws-s3 /bin/true
 ```
 
 Running `docker ps -a` should show something like:
 
 ```sh
-CONTAINER ID   IMAGE            COMMAND        CREATED          STATUS   PORTS    NAMES
-01d5468ac4cf   ecor/scripts-s3  "/bin/true"    15 minutes ago   Created           scripts-s3
+CONTAINER ID   IMAGE                COMMAND        CREATED          STATUS   PORTS    NAMES
+01d5468ac4cf   ecor/scripts-aws-s3  "/bin/true"    15 minutes ago   Created           scripts-aws-s3
 ```
 
 Once the volume is created, it can be used by other containers.
@@ -34,11 +34,11 @@ For example, connecting to a golang environment would look like:
 docker run -i -t -d --name go \
   -v /path/to/my/go/code:/app \
   -w /app \
-  --volumes-from scripts-s3 \
+  --volumes-from scripts-aws-s3 \
   golang:1.6.0-wheezy bash
 ```
 
-`ecor/scripts-s3` exposes a volume called `/scripts/aws/s3`, which will be
+`ecor/scripts-aws-s3` exposes a volume called `/scripts/aws/s3`, which will be
 accessible _inside_ the `go` container.
 
 It's now possible to open a TTY session and run the scripts by hand:
@@ -66,7 +66,7 @@ running on an Ubuntu image, you could just execute an S3 command by running:
 ```sh
 docker run --rm \
   --name db-backup \
-  --volumes-from scripts-s3 \
+  --volumes-from scripts-aws-s3 \
   postgres /scripts/aws/s3/s3-put <params>
 ```
 
